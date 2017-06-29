@@ -54,6 +54,11 @@ class Scraper(object):
             os.mkdir(DATA_DIR)
             os.mkdir(DATA_DIR + "archive")
             os.mkdir(DATA_DIR + "test")
+    def print_out(self):
+        print "hey"
+        print "[{0}] ".format(re.sub(r"(\w)([A-Z])", r"\1 \2", type(self).__name__))
+        print "[{0}] Started Scraper.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
 
     def scrape_site(self):
         '''
@@ -66,9 +71,7 @@ class Scraper(object):
         skipped_pages = 0
 
         self.get_total_number_of_pages()
-        print "hey"
-        print "[{0}] ".format(re.sub(r"(\w)([A-Z])", r"\1 \2", type(self).__name__))
-        print "[{0}] Started Scraper.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        self.print_out()
         for page_num in range(1, self.num_pages_to_scrape + 1):
             url = self.site_url.format(page_num)
             try:

@@ -70,7 +70,8 @@ class Scraper(object):
         divisor = self.num_pages_to_scrape / 5
 
         for page_num in range(1, self.num_pages_to_scrape + 1):
-            print page_num / self.num_pages_to_scrape
+            print page_num
+            print self.num_pages_to_scrape
             if page_num == divisor:
                 print "[{}] - Scraped {}% out of {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), (page_num / self.num_pages_to_scrape) * 100, self.num_pages_to_scrape)
                 divisor = divisor + page_num

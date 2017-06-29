@@ -59,7 +59,7 @@ class Scraper(object):
         '''
         Scrape the whole site
         '''
-
+        test = 1
         all_results = []
         delete_batch = []
         skipped_pages = 0
@@ -74,6 +74,8 @@ class Scraper(object):
                 divisor = divisor + page_num
             elif page_num == self.num_pages_to_scrape:
                 print "[{}] - Scraped {}% out of this {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), page_num, self.num_pages_to_scrape)
+            else:
+                test = 0
 
             url = self.site_url.format(page_num)
             try:

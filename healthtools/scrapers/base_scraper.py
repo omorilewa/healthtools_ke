@@ -65,16 +65,14 @@ class Scraper(object):
         Scrape the whole site
         '''
 
-        print "re"
         all_results = []
-        print "res"
         delete_batch = []
-        print "read"
         skipped_pages = 0
-        print "reall"
+        test = 1
         self.get_total_number_of_pages()
-        print "reaf"
         self.print_out()
+        if test:
+          print "Does this run more than once"
         print "reg"
         for page_num in range(1, self.num_pages_to_scrape + 1):
             url = self.site_url.format(page_num)
@@ -93,7 +91,7 @@ class Scraper(object):
                 skipped_pages += 1
                 self.print_error("ERROR: scrape_site() - source: {} - page: {} - {}".format(url, page_num, err))
                 continue
-        print "[{0}] - . {1} documents retrieved.".format(
+        print "[{0}] - {1} documents retrieved.".format(
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"), len(all_results)/2)  # don't count indexing data
 
         if all_results:

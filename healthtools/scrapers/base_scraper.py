@@ -73,7 +73,6 @@ class Scraper(object):
             count = count + 1
             if page_num % 10 == 0:
               print "scraped {} out of {} pages".format(count, page_num)
-            print "scraped page {}".format(page_num)
             url = self.site_url.format(page_num)
             try:
                 self.retries = 0

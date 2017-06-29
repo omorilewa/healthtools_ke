@@ -73,7 +73,7 @@ class Scraper(object):
 
             if page_num == divisor:
                 print "[{}] - Scraped {} out of {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), page_num, self.num_pages_to_scrape)
-                divisor = divisor + divisor
+                divisor = divisor + (self.num_pages_to_scrape / 10)
             elif page_num == self.num_pages_to_scrape:
                 print "[{}] - Scraped {} out of this {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), page_num, self.num_pages_to_scrape)
             else:

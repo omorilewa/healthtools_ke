@@ -59,14 +59,15 @@ class Scraper(object):
         '''
         Scrape the whole site
         '''
-        print "[{0}] ".format(re.sub(r"(\w)([A-Z])", r"\1 \2", type(self).__name__))
-        print "[{0}] Started Scraper.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
 
         all_results = []
         delete_batch = []
         skipped_pages = 0
 
         self.get_total_number_of_pages()
+                print "[{0}] ".format(re.sub(r"(\w)([A-Z])", r"\1 \2", type(self).__name__))
+        print "[{0}] Started Scraper.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         for page_num in range(1, self.num_pages_to_scrape + 1):
             url = self.site_url.format(page_num)
             try:
@@ -84,7 +85,7 @@ class Scraper(object):
                 skipped_pages += 1
                 self.print_error("ERROR: scrape_site() - source: {} - page: {} - {}".format(url, page_num, err))
                 continue
-        print "[{0}] - Scraper completed. {1} documents retrieved.".format(
+        print "[{0}] - . {1} documents retrieved.".format(
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"), len(all_results)/2)  # don't count indexing data
 
         if all_results:

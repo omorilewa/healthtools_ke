@@ -8,7 +8,7 @@ if __name__ == "__main__":
     # Initialize the Scrapers
     doctors_scraper = DoctorsScraper()
     # foreign_doctors_scraper = ForeignDoctorsScraper()
-    # clinical_officers_scraper = ClinicalOfficersScraper()
+    clinical_officers_scraper = ClinicalOfficersScraper()
     # healthfacilities_scraper = HealthFacilitiesScraper()
 
     # scraping you softly with these bots...
@@ -18,4 +18,4 @@ if __name__ == "__main__":
         # foreign_doctors_scraper.document_id = len(doctors_result) + 1
         # foreign_docs_result = foreign_doctors_scraper.scrape_site()
     # healthfacilities_result = healthfacilities_scraper.scrape_data()
-    # clinical_officers_result = ClinicalOfficersScraper().scrape_site()
+    clinical_officers_result = ClinicalOfficersScraper().scrape_site()

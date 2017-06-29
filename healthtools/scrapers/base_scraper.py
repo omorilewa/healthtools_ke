@@ -69,8 +69,8 @@ class Scraper(object):
         skipped_pages = 0
         self.get_total_number_of_pages()
         for page_num in range(1, self.num_pages_to_scrape + 1):
-            if page_num % 10 == 0:
-              print "scraped {} out of {} pages".format(page_num, self.num_pages_to_scrape)
+            if page_num % 30 == 0:
+              print "[{}]scraped {} out of {} pages".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"),page_num, self.num_pages_to_scrape)
             url = self.site_url.format(page_num)
             try:
                 self.retries = 0

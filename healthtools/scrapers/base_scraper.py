@@ -73,7 +73,7 @@ class Scraper(object):
             if page_num == divisor :
                 print "[{}] - Scraped {}% out of {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), (page_num/self.num_pages_to_scrape) * 100, self.num_pages_to_scrape)
                 divisor = divisor + page_num
-            else:
+            elif page_num == self.num_pages_to_scrape :
                 print "[{}] - Scraped {}% out of {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), page_num, self.num_pages_to_scrape)
 
             url = self.site_url.format(page_num)

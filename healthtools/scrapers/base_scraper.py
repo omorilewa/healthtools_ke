@@ -68,11 +68,9 @@ class Scraper(object):
         delete_batch = []
         skipped_pages = 0
         self.get_total_number_of_pages()
-        count = 0
         for page_num in range(1, self.num_pages_to_scrape + 1):
-            count = count + 1
             if page_num % 10 == 0:
-              print "scraped {} out of {} pages".format(count, page_num)
+              print "scraped {} out of {} pages".format(page_num, self.num_pages_to_scrape)
             url = self.site_url.format(page_num)
             try:
                 self.retries = 0

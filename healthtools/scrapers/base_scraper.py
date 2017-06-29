@@ -65,13 +65,17 @@ class Scraper(object):
         Scrape the whole site
         '''
 
-
+        print "re"
         all_results = []
+        print "res"
         delete_batch = []
+        print "read"
         skipped_pages = 0
-
+        print "reall"
         self.get_total_number_of_pages()
+        print "reaf"
         self.print_out()
+        print "reg"
         for page_num in range(1, self.num_pages_to_scrape + 1):
             url = self.site_url.format(page_num)
             try:

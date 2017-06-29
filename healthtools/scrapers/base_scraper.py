@@ -59,7 +59,6 @@ class Scraper(object):
         print "[{0}] ".format(re.sub(r"(\w)([A-Z])", r"\1 \2", type(self).__name__))
         print "[{0}] Started Scraper.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-
     def scrape_site(self):
         '''
         Scrape the whole site
@@ -70,7 +69,6 @@ class Scraper(object):
         skipped_pages = 0
         test = 1
         self.get_total_number_of_pages()
-        self.print_out()
         if test:
           print "Does this run more than once"
         print "reg"

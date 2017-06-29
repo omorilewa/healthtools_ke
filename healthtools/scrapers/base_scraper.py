@@ -67,12 +67,12 @@ class Scraper(object):
         all_results = []
         delete_batch = []
         skipped_pages = 0
-        test = 1
         self.get_total_number_of_pages()
-        if test:
-          print "Does this run more than once"
-        print "reg"
+        count = 0
         for page_num in range(1, self.num_pages_to_scrape + 1):
+            count = count + 1
+            if page_num % 10 == 0:
+              print "scraped {} out of {} pages".format(count, page_num)
             print "scraped page {}".format(page_num)
             url = self.site_url.format(page_num)
             try:

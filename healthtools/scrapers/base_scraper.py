@@ -73,6 +73,7 @@ class Scraper(object):
           print "Does this run more than once"
         print "reg"
         for page_num in range(1, self.num_pages_to_scrape + 1):
+            print "scraped page {}".format(page_num)
             url = self.site_url.format(page_num)
             try:
                 self.retries = 0

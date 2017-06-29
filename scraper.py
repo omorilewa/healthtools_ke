@@ -12,7 +12,6 @@ if __name__ == "__main__":
     # healthfacilities_scraper = HealthFacilitiesScraper()
 
     # scraping you softly with these bots...
-    doctors_scraper.print_out()
     doctors_result = doctors_scraper.scrape_site()
     # if doctors_result:
         # foreign_doctors_scraper.document_id = len(doctors_result) + 1

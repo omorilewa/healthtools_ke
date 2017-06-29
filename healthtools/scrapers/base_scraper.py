@@ -68,10 +68,11 @@ class Scraper(object):
         print "[{0}] ".format(re.sub(r"(\w)([A-Z])", r"\1 \2", type(self).__name__))
         print "[{0}] - Started Scraper.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         self.get_total_number_of_pages()
+        divisor = self.num_pages_to_scrape / 5
         for page_num in range(1, self.num_pages_to_scrape + 1):
-            print "Number of pages over 5 {}".format(self.num_pages_to_scrape / 5)
-            if (self.num_pages_to_scrape / 5) % page_num == 0:
+            if page_num == divisor :
                 print "[{}] - Scraped {}% out of {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), (page_num/self.num_pages_to_scrape) * 100, self.num_pages_to_scrape)
+                divisor = divisor + page_num
             else:
                 print "[{}] - Scraped {}% out of {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), page_num, self.num_pages_to_scrape)
 

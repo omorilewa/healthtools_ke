@@ -14,7 +14,7 @@ import sys
 import os
 import getpass
 
-from __future__ import print_function
+# from __future__ import print_function
 
 import functools
 import random
@@ -88,7 +88,7 @@ class Scraper(object):
         for page_num in range(1, self.num_pages_to_scrape + 1):
             if page_num == divisor:
                 time.sleep(1)
-                bar.update(i + 1)
+                bar.update(page_num + 1)
                 # print "[{}] - Scraped {} out of {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), page_num, self.num_pages_to_scrape)
                 divisor = divisor + (self.num_pages_to_scrape / 10)
             elif page_num == self.num_pages_to_scrape:

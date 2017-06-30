@@ -76,7 +76,7 @@ class Scraper(object):
         delete_batch = []
         skipped_pages = 0
         widgets = [progressbar.Percentage(), progressbar.Bar()]
-
+        start = 0
 
         self.get_total_number_of_pages()
         bar = progressbar.ProgressBar(widgets=widgets, max_value=10).start()
@@ -88,7 +88,8 @@ class Scraper(object):
         for page_num in range(1, self.num_pages_to_scrape + 1):
             if page_num == divisor:
                 time.sleep(1)
-                bar.update(page_num + 1)
+                start = start + 1
+                bar.update(start)
                 # print "[{}] - Scraped {} out of {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), page_num, self.num_pages_to_scrape)
                 divisor = divisor + (self.num_pages_to_scrape / 10)
             elif page_num == self.num_pages_to_scrape:

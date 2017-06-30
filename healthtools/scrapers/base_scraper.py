@@ -14,6 +14,13 @@ import sys
 import os
 import getpass
 
+from __future__ import print_function
+
+import functools
+import random
+import sys
+import time
+import progressbar
 
 class Scraper(object):
     def __init__(self):
@@ -63,19 +70,26 @@ class Scraper(object):
         all_results = []
         delete_batch = []
         skipped_pages = 0
-        print ""
+        widgets = [progressbar.Percentage(), progressbar.Bar()]
+
         print "[{0}] ".format(re.sub(r"(\w)([A-Z])", r"\1 \2", type(self).__name__))
         print "[{0}] - Started Scraper.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         self.get_total_number_of_pages()
+        bar = progressbar.ProgressBar(widgets=widgets, max_value=10).start()
+        # for i in range(20):
+
+
         divisor = self.num_pages_to_scrape / 10
 
         for page_num in range(1, self.num_pages_to_scrape + 1):
 
             if page_num == divisor:
-                print "[{}] - Scraped {} out of {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), page_num, self.num_pages_to_scrape)
+                time.sleep(1)
+                bar.update(i + 1)
+                # print "[{}] - Scraped {} out of {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), page_num, self.num_pages_to_scrape)
                 divisor = divisor + (self.num_pages_to_scrape / 10)
             elif page_num == self.num_pages_to_scrape:
-                print "[{}] - Scraped {} out of this {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), page_num, self.num_pages_to_scrape)
+                print "[{}] - Scraped {} out of {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), page_num, self.num_pages_to_scrape)
             else:
                 test = 0
 
@@ -95,6 +109,8 @@ class Scraper(object):
                 skipped_pages += 1
                 self.print_error("ERROR: scrape_site() - source: {} - page: {} - {}".format(url, page_num, err))
                 continue
+
+        bar.finish()
         print "[{0}] - {1} documents retrieved.".format(
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"), len(all_results)/2)  # don't count indexing data
 

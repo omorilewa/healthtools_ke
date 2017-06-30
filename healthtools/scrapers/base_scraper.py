@@ -66,14 +66,18 @@ class Scraper(object):
         '''
         Scrape the whole site
         '''
-        test = 1
+        try:
+          print "[{0}] ".format(re.sub(r"(\w)([A-Z])", r"\1 \2", type(self).__name__))
+        except Exception as err:
+          print err
+        print "[{0}] - Started Scraper.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
         all_results = []
         delete_batch = []
         skipped_pages = 0
         widgets = [progressbar.Percentage(), progressbar.Bar()]
 
-        print "[{0}] ".format(re.sub(r"(\w)([A-Z])", r"\1 \2", type(self).__name__))
-        print "[{0}] - Started Scraper.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
         self.get_total_number_of_pages()
         bar = progressbar.ProgressBar(widgets=widgets, max_value=10).start()
         # for i in range(20):
@@ -82,7 +86,6 @@ class Scraper(object):
         divisor = self.num_pages_to_scrape / 10
 
         for page_num in range(1, self.num_pages_to_scrape + 1):
-
             if page_num == divisor:
                 time.sleep(1)
                 bar.update(i + 1)

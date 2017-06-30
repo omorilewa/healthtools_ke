@@ -13,6 +13,8 @@ import hashlib
 import sys
 import os
 import getpass
+from progressbar import ProgressBar
+
 
 # from __future__ import print_function
 
@@ -20,7 +22,7 @@ import functools
 import random
 import sys
 import time
-import progressbar
+# import progressbar
 
 class Scraper(object):
     def __init__(self):
@@ -78,18 +80,18 @@ class Scraper(object):
         start = 0
 
         self.get_total_number_of_pages()
-        widgets = [progressbar.Percentage(), progressbar.Bar()]
-        bar = progressbar.ProgressBar(widgets=widgets, max_value=10).start()
+        # widgets = [progressbar.Percentage(), progressbar.Bar()]
+        # bar = progressbar.ProgressBar(widgets=widgets, max_value=10).start()
         # for i in range(20):
 
 
         divisor = self.num_pages_to_scrape / 10
-
-        for page_num in range(1, self.num_pages_to_scrape + 1):
+        pbar = ProgressBar()
+        for page_num in pbar(range(1, self.num_pages_to_scrape + 1)):
             if page_num == divisor:
-                time.sleep(0.1)
-                start = start + 1
-                bar.update(start)
+                # time.sleep(0.1)
+                # start = start + 1
+                # bar.update(start)
                 # print "[{}] - Scraped {} out of {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), page_num, self.num_pages_to_scrape)
                 divisor = divisor + (self.num_pages_to_scrape / 10)
             elif page_num == self.num_pages_to_scrape:

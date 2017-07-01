@@ -13,8 +13,8 @@ import hashlib
 import sys
 import os
 import getpass
-from progressbar import ProgressBar
-
+# from progressbar import ProgressBar
+from tqdm import tqdm
 
 # from __future__ import print_function
 
@@ -86,18 +86,18 @@ class Scraper(object):
 
 
         divisor = self.num_pages_to_scrape / 10
-        pbar = ProgressBar()
-        for page_num in pbar(range(1, self.num_pages_to_scrape + 1)):
-            if page_num == divisor:
+        # pbar = ProgressBar()
+        for page_num in tqdm(range(1, self.num_pages_to_scrape + 1)):
+            # if page_num == divisor:
                 # time.sleep(0.1)
                 # start = start + 1
                 # bar.update(start)
                 # print "[{}] - Scraped {} out of {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), page_num, self.num_pages_to_scrape)
-                divisor = divisor + (self.num_pages_to_scrape / 10)
-            elif page_num == self.num_pages_to_scrape:
-                print "[{}] - Scraped {} out of {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), page_num, self.num_pages_to_scrape)
-            else:
-                test = 0
+            #     divisor = divisor + (self.num_pages_to_scrape / 10)
+            # elif page_num == self.num_pages_to_scrape:
+            #     print "[{}] - Scraped {} out of {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), page_num, self.num_pages_to_scrape)
+            # else:
+            #     test = 0
 
             url = self.site_url.format(page_num)
             try:

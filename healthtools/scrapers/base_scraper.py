@@ -115,8 +115,6 @@ class Scraper(object):
                 skipped_pages += 1
                 self.print_error("ERROR: scrape_site() - source: {} - page: {} - {}".format(url, page_num, err))
                 continue
-
-        bar.finish()
         print "[{0}] - {1} documents retrieved.".format(
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"), len(all_results)/2)  # don't count indexing data
 

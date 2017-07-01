@@ -27,5 +27,6 @@ requests-aws4auth==0.9
 s3transfer==0.1.10
 six==1.10.0
 slackclient==1.0.6
+tqdm==4.14.0
 urllib3==1.21.1
 websocket-client==0.40.0

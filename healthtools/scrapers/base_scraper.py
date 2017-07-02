@@ -73,7 +73,7 @@ class Scraper(object):
         except Exception as err:
           print err
         print "[{0}] - Started Scraper.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
+        sys.stdout.flush()
         all_results = []
         delete_batch = []
         skipped_pages = 0

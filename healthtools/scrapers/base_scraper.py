@@ -16,6 +16,8 @@ import getpass
 # from progressbar import ProgressBar
 from tqdm import tqdm
 
+sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+
 # from __future__ import print_function
 
 import functools

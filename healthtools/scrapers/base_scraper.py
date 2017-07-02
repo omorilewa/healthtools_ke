@@ -88,6 +88,7 @@ class Scraper(object):
         divisor = self.num_pages_to_scrape / 10
         # pbar = ProgressBar()
         for page_num in tqdm(range(1, self.num_pages_to_scrape + 1)):
+            sys.stdout.flush()
             # if page_num == divisor:
                 # time.sleep(0.1)
                 # start = start + 1

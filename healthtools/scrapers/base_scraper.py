@@ -4,6 +4,7 @@ from datetime import datetime
 from elasticsearch import Elasticsearch, RequestsHttpConnection
 from requests_aws4auth import AWS4Auth
 from serializer import JSONSerializerPython2
+from tqdm import tqdm
 from healthtools.config import AWS, ES, SLACK, SMALL_BATCH, DATA_DIR
 import requests
 import boto3
@@ -13,53 +14,44 @@ import hashlib
 import sys
 import os
 import getpass
-# from progressbar import ProgressBar
-from tqdm import tqdm
 
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
-
-# from __future__ import print_function
-
-import functools
-import random
-import sys
-import time
-# import progressbar
 
 class Scraper(object):
     def __init__(self):
+        self.small_batch = True if "small_batch" in sys.argv else False
+
         self.num_pages_to_scrape = None
         self.site_url = None
         self.fields = None
         self.s3_key = None
+        self.doctor_type = None
         self.document_id = 0  # id for each entry, to be incremented
-        self.delete_file = None  # contains docs to be deleted after scrape
         self.s3_historical_record_key = None  # s3 historical_record key
         self.s3 = boto3.client("s3", **{
             "aws_access_key_id": AWS["aws_access_key_id"],
             "aws_secret_access_key": AWS["aws_secret_access_key"],
             "region_name": AWS["region_name"]
         })
-        self.small_batch = True if "small_batch" in sys.argv else False
+
         try:
             # client host for aws elastic search service
             if "aws" in ES["host"]:
                 # set up authentication credentials
                 awsauth = AWS4Auth(AWS["aws_access_key_id"], AWS["aws_secret_access_key"], AWS["region_name"], "es")
                 self.es_client = Elasticsearch(
-                    hosts=ES["host"],
-                    port=ES["port"],
+                    hosts=[{"host": ES["host"], "port": int(ES["port"])}],
                     http_auth=awsauth,
                     use_ssl=True,
                     verify_certs=True,
                     connection_class=RequestsHttpConnection,
                     serializer=JSONSerializerPython2()
                 )
+
             else:
                 self.es_client = Elasticsearch("{}:{}".format(ES["host"], ES["port"]))
         except Exception as err:
-            self.print_error("[{}] - ERROR: Invalid Parameters For ES Client".format(
-                datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            self.print_error("ERROR: Invalid parameters for ES Client: {}".format(str(err)))
+
         # if to save locally create relevant directories
         if not AWS["s3_bucket"] and not os.path.exists(DATA_DIR):
             os.mkdir(DATA_DIR)
@@ -70,74 +62,36 @@ class Scraper(object):
         '''
         Scrape the whole site
         '''
-        try:
-          print "[{0}] ".format(re.sub(r"(\w)([A-Z])", r"\1 \2", type(self).__name__))
-        except Exception as err:
-          print err
-        print "[{0}] - Started Scraper.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        sys.stdout.flush()
+        print "[{0}] ".format(re.sub(r"(\w)([A-Z])", r"\1 \2", type(self).__name__))
+        print "[{0}] Started Scraper.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
         all_results = []
-        delete_batch = []
         skipped_pages = 0
-        start = 0
 
         self.get_total_number_of_pages()
-        # widgets = [progressbar.Percentage(), progressbar.Bar()]
-        # bar = progressbar.ProgressBar(widgets=widgets, max_value=10).start()
-        # for i in range(20):
-
-
-        divisor = self.num_pages_to_scrape / 10
-        # pbar = ProgressBar()
         for page_num in tqdm(range(1, self.num_pages_to_scrape + 1)):
-            sys.stdout.flush()
-            # if page_num == divisor:
-                # time.sleep(0.1)
-                # start = start + 1
-                # bar.update(start)
-                # print "[{}] - Scraped {} out of {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), page_num, self.num_pages_to_scrape)
-            #     divisor = divisor + (self.num_pages_to_scrape / 10)
-            # elif page_num == self.num_pages_to_scrape:
-            #     print "[{}] - Scraped {} out of {} pages.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), page_num, self.num_pages_to_scrape)
-            # else:
-            #     test = 0
-
             url = self.site_url.format(page_num)
             try:
                 self.retries = 0
                 scraped_page = self.scrape_page(url)
-                if type(scraped_page) != tuple:
+                if scraped_page is None:
                     print "There's something wrong with the site. Proceeding to the next scraper."
                     return
 
-                entries, delete_docs = scraped_page
-
-                all_results.extend(entries)
-                delete_batch.extend(delete_docs)
+                all_results.extend(scraped_page)
             except Exception as err:
                 skipped_pages += 1
-                self.print_error("ERROR: scrape_site() - source: {} - page: {} - {}".format(url, page_num, err))
+                self.print_error("ERROR - scrape_site() - source: {} page: {} - {}".format(url, page_num, err))
                 continue
-        print "[{0}] - {1} documents retrieved.".format(
+        print "[{0}] - Scraper completed. {1} documents retrieved.".format(
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"), len(all_results)/2)  # don't count indexing data
 
         if all_results:
             all_results_json = json.dumps(all_results)
-            delete_batch = json.dumps(delete_batch)
-
-            self.delete_elasticsearch_docs()
+            self.delete_elasticsearch_docs(ES["index"])
             self.upload_data(all_results)
             self.archive_data(all_results_json)
 
-            # store delete operations for next scrape
-            if AWS["s3_bucket"]:
-                delete_file = StringIO(delete_batch)
-                self.s3.upload_fileobj(
-                    delete_file, AWS["s3_bucket"],
-                    self.delete_file)
-            else:
-                with open(self.delete_file, "w") as delete:
-                    json.dump(delete_batch, delete)
             print "[{0}] - Completed Scraper.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
             return all_results
@@ -152,7 +106,6 @@ class Scraper(object):
             rows = table.find_all("tr")
 
             entries = []
-            delete_batch = []
             for row in rows:
                 # only the columns we want
                 # -1 because fields/columns has extra index; id
@@ -165,18 +118,11 @@ class Scraper(object):
                 entries.append(meta)
                 entries.append(entry)
 
-                delete_batch.append({
-                    "delete":
-                        {
-                            "_index": ES["index"],
-                            "_type": meta["index"]["_type"],
-                            "_id": entry["id"]
-                            }})
                 self.document_id += 1
-            return entries, delete_batch
+            return entries
         except Exception as err:
             if self.retries >= 5:
-                self.print_error("ERROR: Failed to scrape data from page {}  -- {}".format(page_url, str(err)))
+                self.print_error("ERROR - Failed to scrape data from page - {} - {}".format(page_url, str(err)))
                 return err
             else:
                 self.retries += 1
@@ -231,9 +177,10 @@ class Scraper(object):
                 print "[{0}] - Archived data has been updated.".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
         except Exception as err:
-            self.print_error("ERROR - archive_data() - {} - {}".format(self.s3_key, str(err)))
+            self.print_error(
+                "ERROR - archive_data() - {} - {}".format(self.s3_key, str(err)))
 
-    def delete_elasticsearch_docs(self):
+    def delete_elasticsearch_docs(self, index):
         '''
         Delete documents that were uploaded to elasticsearch in the last scrape
         '''
@@ -245,48 +192,26 @@ class Scraper(object):
                 _type = "doctors"
             else:
                 _type = "health-facilities"
-            # get documents to be deleted
-            if AWS["s3_bucket"]:
-                delete_docs = self.s3.get_object(
-                    Bucket=AWS["s3_bucket"],
-                    Key=self.delete_file)["Body"].read()
-            else:
-                if os.path.exists(self.delete_file):
-                    with open(self.delete_file) as delete:
-                        delete_docs = json.load(delete)
-                else:
-                    self.print_error("ERROR - delete_elasticsearch_docs() - no delete file present")
-                    return
-            # delete
+            # query to delete docs
+            delete_query = {
+                "query": {
+                    "match": {
+                        "doctor_type": self.doctor_type
+                    }
+                }
+            }
+
+            if not self.doctor_type:
+              delete_query['query'] = { "match_all": {}}
+
             try:
-                response = self.es_client.bulk(index=ES["index"], body=delete_docs, refresh=True)
-            except:
-                # incase records are saved in cloudsearch's format, reformat for elasticsearch deletion
-                delete_records = []
-                for record in json.loads(delete_docs):
-                    try:
-                        delete_records.append({
-                            "delete": {
-                                "_index": ES["index"],
-                                "_type": _type,
-                                "_id": record["delete"]["_id"]
-                                }
-                            })
-                    except:
-                        delete_records.append({
-                            "delete": {
-                                "_index": ES["index"],
-                                "_type": _type,
-                                "_id": record["id"]
-                                }
-                            })
-                response = self.es_client.bulk(index=ES["index"], body=delete_records)
-            return response
+                response = self.es_client.delete_by_query(index=index, doc_type=_type, body=delete_query)
+                return response
+            except Exception as err:
+                self.print_error("ERROR - delete_elasticsearch_docs() - {} - {}".format(type(self).__name__, str(err)))
+
         except Exception as err:
-            if "NoSuchKey" in err:
-                self.print_error("ERROR - delete_elasticsearch_docs() - no delete file present")
-                return
-            self.print_error("ERROR - delete_elasticsearch_docs() - {} - {}".format(type(self).__name__, str(err)))
+          self.print_error("ERROR - delete_elasticsearch_docs() - {} - {}".format(type(self).__name__, str(err)))
 
     def get_total_number_of_pages(self):
         '''
@@ -303,7 +228,7 @@ class Scraper(object):
                 pattern = re.compile("(\d+) pages?")
                 self.num_pages_to_scrape = int(pattern.search(text).group(1))
         except Exception as err:
-            self.print_error("ERROR: **get_total_page_numbers()** - url: {} - err: {}".format(self.site_url, str(err)))
+            self.print_error("ERROR - get_total_page_numbers() - url: {} - err: {}".format(self.site_url, str(err)))
             return
 
     def make_soup(self, url):
@@ -326,8 +251,8 @@ class Scraper(object):
                 "_index": "index",
                 "_type": "type",
                 "_id": "id"
-                }
             }
+        }
         return meta_dict, entry
 
     def print_error(self, message):
@@ -338,54 +263,44 @@ class Scraper(object):
         print("[{0}] - ".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")) + message)
         response = None
         if SLACK["url"]:
-            errors = message.split("-")
+            errors = message.split("-", 3)
             try:
-                response = requests.post(
-                    SLACK["url"],
-                    data=json.dumps(
-                        {"attachments": [{
-                            "author_name": "{}".format(errors[2]),
-                            "color": "danger",
-                            "pretext": "[SCRAPER] New Alert for{}:{}".format(errors[2], errors[1]),
-                            "fields": [{
-                                "title": "Message",
-                                "value": "{}".format(errors[3]),
-                                "short": False}, {
-                                "title": "Machine Location",
-                                "value": "{}".format(getpass.getuser()),
-                                "short": True}, {
-                                "title": "Time",
-                                "value": "{}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-                                "short": True}, {
-                                "title": "Severity",
-                                "value": "{}".format(errors[3].split(":")[1]),
-                                "short": True}
-                                ]
-                            }]}), headers={"Content-Type": "application/json"})
+                severity = errors[3].split(":")[1]
             except:
-                # some errors are formatted differently and this block of code handles that
-                errors = message.split(":")
-                error_message = errors[0].split("-")
-                response = requests.post(
-                    SLACK["url"],
-                    data=json.dumps(
-                        {"attachments": [{
-                            "author_name": "{}".format(error_message[2]),
-                            "color": "danger",
-                            "pretext": "[SCRAPER] New Alert for{}:{}".format(error_message[2], error_message[1]),
-                            "fields": [{
-                                "title": "Message",
-                                "value": "{}".format(errors[1]),
-                                "short": False}, {
-                                "title": "Machine Location",
-                                "value": "{}".format(getpass.getuser()),
-                                "short": True}, {
-                                "title": "Time",
-                                "value": "{}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
-                                "short": True}, {
-                                "title": "Severity",
-                                "value": "{}".format(errors[1].split(".")[0]),
-                                "short": True}
+                severity = errors[3]
+            response = requests.post(
+                SLACK["url"],
+                data=json.dumps(
+                    {
+                        "attachments":
+                            [
+                                {
+                                    "author_name": "{}".format(errors[2]),
+                                    "color": "danger",
+                                    "pretext": "[SCRAPER] New Alert for{}:{}".format(errors[2], errors[1]),
+                                    "fields": [
+                                        {
+                                            "title": "Message",
+                                            "value": "{}".format(errors[3]),
+                                            "short": False
+                                            },
+                                        {
+                                            "title": "Machine Location",
+                                            "value": "{}".format(getpass.getuser()),
+                                            "short": True
+                                            },
+                                        {
+                                            "title": "Time",
+                                            "value": "{}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+                                            "short": True},
+                                        {
+                                            "title": "Severity",
+                                            "value": "{}".format(severity),
+                                            "short": True
+                                            }
+                                        ]
+                                    }
                                 ]
-                                }]}), headers={"Content-Type": "application/json"})
+                        }),
+                headers={"Content-Type": "application/json"})
         return response
